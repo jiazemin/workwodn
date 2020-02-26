@@ -1,0 +1,164 @@
+version: "2.2"
+services:
+  tpass-init:
+    image: harbor.hongmeng-info.com/tpass/tpass-init-docker:v0.0.1-alpha
+    volumes:
+      - node-modules-volume:/node_modules
+
+  dzgzpt-hmdcx:
+    image: registry.gzsw.gov.cn/tpass/dzgzpt-hmdcx:0.0.3
+    container_name: dzgzpt-hmdcx
+    restart: always
+    ports:
+      - "10001:8080"
+    expose:
+      - "8080"
+    depends_on:
+      - tpass-init
+    volumes:
+      - node-modules-volume:/node_modules
+    networks:
+      - appnet
+    # 2.2版本
+    cpus: 1
+    mem_limit: 128m
+    cpuset: "0,1"
+    mem_reservation: 64m
+
+    # 3.0以上版本
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: 1000m
+    #       memory: 128Mi
+    #     reservations:
+    #       cpus: 100m
+    #       memory: 64Mi
+
+
+  dzgzpt-login:
+    image: registry.gzsw.gov.cn/tpass/dzgzpt-login:0.0.3
+    container_name: dzgzpt-login
+    restart: always
+    ports:
+      - "10002:8080"
+    expose:
+      - "8080"
+    depends_on:
+      - tpass-init
+    volumes:
+      - node-modules-volume:/node_modules
+    networks:
+      - appnet
+    # 2.2版本
+    cpus: 1
+    mem_limit: 128m
+    cpuset: "0,1"
+    mem_reservation: 64m
+
+    # 3.0以上版本
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: 1000m
+    #       memory: 128Mi
+    #     reservations:
+    #       cpus: 100m
+    #       memory: 64Mi
+
+  fp-login:
+    image: registry.gzsw.gov.cn/tpass/fp-login:0.0.3
+    container_name: fp-login
+    restart: always
+    ports:
+      - "10003:8080"
+    expose:
+      - "8080"
+    depends_on:
+      - tpass-init
+    volumes:
+      - node-modules-volume:/node_modules
+    networks:
+      - appnet
+    # 2.2版本
+    cpus: 1
+    mem_limit: 128m
+    cpuset: "0,1"
+    mem_reservation: 64m
+
+    # 3.0以上版本
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: 1000m
+    #       memory: 128Mi
+    #     reservations:
+    #       cpus: 100m
+    #       memory: 64Mi
+    
+  g1-login:
+    image: registry.gzsw.gov.cn/tpass/g1-login:0.0.3
+    container_name: g1-login
+    restart: always
+    ports:
+      - "10004:8080"
+    expose:
+      - "8080"
+    depends_on:
+      - tpass-init
+    volumes:
+      - node-modules-volume:/node_modules
+    networks:
+      - appnet
+    # 2.2版本
+    cpus: 1
+    mem_limit: 128m
+    cpuset: "0,1"
+    mem_reservation: 64m
+
+    # 3.0以上版本
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: 1000m
+    #       memory: 128Mi
+    #     reservations:
+    #       cpus: 100m
+    #       memory: 64Mi 
+
+  g2-login:
+    image: registry.gzsw.gov.cn/tpass/g2-login:0.0.3
+    container_name: g2-login
+    restart: always
+    ports:
+      - "10005:8080"
+    expose:
+      - "8080"
+    networks:
+      - appnet
+    depends_on:
+      - tpass-init
+    volumes:
+      - node-modules-volume:/node_modules
+    # 2.2版本
+    cpus: 1
+    mem_limit: 128m
+    cpuset: "0,1"
+    mem_reservation: 64m
+
+    # 3.0以上版本
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: 1000m
+    #       memory: 128Mi
+    #     reservations:
+    #       cpus: 100m
+    #       memory: 64Mi
+    
+volumes:
+  node-modules-volume:
+
+networks:
+  appnet:
+    external: true

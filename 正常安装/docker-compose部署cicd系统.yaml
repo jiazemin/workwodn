@@ -1,0 +1,114 @@
+version: "2"
+services:
+  gitea-app:
+    image: gitea/gitea:latest
+    container_name: gitea-app
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - ROOT_URL=http://192.168.10.16:3000
+    restart: always
+    volumes:
+      - ./volumes/gitea_app:/data
+    ports:
+      - "3000:3000"
+      - "2222:22"
+    networks:
+      - appnet
+
+  gitea-db:
+    image: postgres:alpine
+    container_name: gitea-db
+    ports:
+      - "5440:5432"
+    restart: always
+    volumes:
+      - ./volumes/gitea_db:/var/lib/postgresql/data
+    environment:
+      # 选择postgres数据库
+      # 数据库主机：gitea-db:5432
+      # 账号密码：postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=gitea
+    networks:
+      - appnet
+
+  drone-server:
+    image: drone/drone:0.8
+    container_name: drone-server
+    ports:
+      - "8000:8000"
+      - "9000"
+    volumes:
+      - ./volumes/drone:/var/lib/drone/
+    restart: always
+    depends_on:
+      - gitea-app
+    environment:
+      - DRONE_OPEN=true
+      - DRONE_HOST=http://drone-server:8000
+      - DRONE_ADMIN=hongmeng
+        #密码it168
+      - DRONE_SECRET=aXQxNjg=
+      - DRONE_GITEA=true
+      - DRONE_GITEA_URL=http://192.168.10.16:3000
+      #- DRONE_GITEA_CLIENT=7f149c14-6c14-4b74-8f23-8da85399b485
+      #- DRONE_GITEA_SECRET=_zmlvOjWjII7WGj9BUZWZINWH5IIgufWKGRqUBzKIJY=
+      - DRONE_NETWORK=appnet
+    networks:
+      - appnet
+
+  drone-agent:
+    image: drone/agent:0.8
+    container_name: drone-agent
+    command: agent
+    restart: always
+    depends_on:
+      - drone-server
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_SERVER=drone-server:9000
+      - DRONE_SECRET=aXQxNjg=
+    networks:
+      - appnet
+
+
+  verdaccio:
+    image: verdaccio/verdaccio:3.11.6
+    container_name: verdaccio-app
+    restart: always
+    ports:
+      - 4873:4873
+    volumes:
+      - ./storage:/verdaccio/storage
+
+
+# 1.先在宿主机/var目录下创建一个docker-data文件夹
+# 2.在docker-data的文件夹内再创建auth和registry文件夹
+# 3.执行以下命令设置密码 docker run --entrypoint htpasswd registry:latest -Bbn hongmeng it168 > /var/docker-data/auth/htpasswd
+# 4.建议将此yaml文件放置到/var/docker-data文件夹内，然后执行docker-compose up命令
+# 5.浏览器访问192.168.10.16:5000（注意：要修改/etc/docker/daemon.json配置文件,将私服仓库设置为允许访问）
+# 6.在宿主机中执行命令（输入账号密码）：docker login localhost:5000 
+  cicd-registry:
+    container_name: cicd-registry
+    image: registry:latest
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+    volumes:
+      - /var/docker-data/registry:/var/lib/registry
+      - /var/docker-data/auth:/auth
+
+volumes:
+  gitea-app:
+  gitea-db:
+
+networks:
+  appnet:
+    external: true
